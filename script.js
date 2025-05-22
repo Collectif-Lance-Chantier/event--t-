@@ -7,6 +7,7 @@ let planeX = 50;
 let planeY = window.innerHeight / 2;
 let targetX = planeX;
 let targetY = planeY;
+
 let distance = 0;
 let coins = 0;
 
@@ -15,43 +16,78 @@ let hasMagnet = false;
 let speedMultiplier = 1;
 let bonusShown = false;
 
-// ----------------- Déplacement fluide -----------------
-
-let keysPressed = {};
-
-document.addEventListener("keydown", (e) => keysPressed[e.key] = true);
-document.addEventListener("keyup", (e) => keysPressed[e.key] = false);
-
-// Tactile (mobile)
 const isMobile = window.innerWidth <= 768;
-if (isMobile) {
-  const btns = ["up", "down", "left", "right"];
-  btns.forEach(btn => {
-    const el = document.getElementById(btn);
-    el.addEventListener("touchstart", () => keysPressed[btn] = true);
-    el.addEventListener("touchend", () => keysPressed[btn] = false);
-  });
+
+// --- Animation plane ---
+function updatePlanePosition() {
+  plane.style.left = planeX + "px";
+  plane.style.top = planeY + "px";
 }
 
 function animatePlane() {
-  const speed = 4;
+  planeX += (targetX - planeX) * 0.1;
+  planeY += (targetY - planeY) * 0.1;
+  updatePlanePosition();
+  requestAnimationFrame(animatePlane);
+}
+animatePlane();
 
-  if (keysPressed["ArrowUp"] || keysPressed["up"]) targetY = Math.max(0, targetY - speed);
-  if (keysPressed["ArrowDown"] || keysPressed["down"]) targetY = Math.min(window.innerHeight - 40, targetY + speed);
-  if (keysPressed["ArrowLeft"] || keysPressed["left"]) targetX = Math.max(0, targetX - speed);
-  if (keysPressed["ArrowRight"] || keysPressed["right"]) targetX = Math.min(window.innerWidth - 60, targetX + speed);
+// --- Mobile : suivi du doigt ---
+if (isMobile) {
+  document.addEventListener("touchmove", (e) => {
+    const touch = e.touches[0];
+    const x = Math.max(planeX, Math.min(touch.clientX - 30, window.innerWidth - 60));
+    const y = Math.max(0, Math.min(touch.clientY - 20, window.innerHeight - 40));
+    targetX = x;
+    targetY = y;
+  }, { passive: false });
+} else {
+  // --- PC : déplacement avec les flèches (sans reculer) ---
+  // --- PC : déplacement fluide avec les flèches (sans reculer) ---
+    let keysPressed = {
+      ArrowUp: false,
+      ArrowDown: false,
+      ArrowRight: false,
+    };
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key in keysPressed) {
+        keysPressed[e.key] = true;
+      }
+    });
+
+    document.addEventListener("keyup", (e) => {
+      if (e.key in keysPressed) {
+        keysPressed[e.key] = false;
+      }
+    });
+
+// --- Ajout dans la boucle d'animation ---
+function animatePlane() {
+  // Appliquer les touches clavier seulement sur PC
+  if (!isMobile) {
+    const step = 4;
+    if (keysPressed.ArrowUp) {
+      targetY = Math.max(0, targetY - step);
+    }
+    if (keysPressed.ArrowDown) {
+      targetY = Math.min(window.innerHeight - 40, targetY + step);
+    }
+    if (keysPressed.ArrowRight) {
+      targetX = Math.min(window.innerWidth - 60, targetX + step);
+    }
+    // Pas de gauche autorisé
+  }
 
   planeX += (targetX - planeX) * 0.1;
   planeY += (targetY - planeY) * 0.1;
-
-  plane.style.left = planeX + "px";
-  plane.style.top = planeY + "px";
-
+  updatePlanePosition();
   requestAnimationFrame(animatePlane);
 }
 
-// ----------------- Nuages -----------------
+}
 
+// --- Nuages ---
 function createCloud() {
   const cloud = document.createElement("div");
   cloud.classList.add("cloud");
@@ -68,10 +104,11 @@ function createCloud() {
     const cloudRect = cloud.getBoundingClientRect();
 
     if (!isInvincible &&
-        planeRect.left < cloudRect.right &&
-        planeRect.right > cloudRect.left &&
-        planeRect.top < cloudRect.bottom &&
-        planeRect.bottom > cloudRect.top) {
+      planeRect.left < cloudRect.right &&
+      planeRect.right > cloudRect.left &&
+      planeRect.top < cloudRect.bottom &&
+      planeRect.bottom > cloudRect.top
+    ) {
       alert("💥 Collision avec un nuage !\nDistance parcourue : " + distance + " m");
       location.reload();
     }
@@ -83,8 +120,7 @@ function createCloud() {
   }, 16);
 }
 
-// ----------------- Pièces -----------------
-
+// --- Pièces ---
 function createCoin() {
   const coin = document.createElement("div");
   coin.classList.add("coin");
@@ -126,8 +162,7 @@ function createCoin() {
   }, 16);
 }
 
-// ----------------- Bonus -----------------
-
+// --- Bonus ---
 function createBonus(type) {
   const bonus = document.createElement("div");
   bonus.classList.add("bonus", type);
@@ -166,7 +201,6 @@ function activateStarBonus() {
   isInvincible = true;
   speedMultiplier = 2;
   plane.classList.add("invincible");
-
   setTimeout(() => {
     isInvincible = false;
     speedMultiplier = 1;
@@ -177,19 +211,16 @@ function activateStarBonus() {
 function activateMagnetBonus() {
   hasMagnet = true;
   plane.classList.add("magnet");
-
   setTimeout(() => {
     hasMagnet = false;
     plane.classList.remove("magnet");
   }, 5000);
 }
 
-// ----------------- Boucle jeu -----------------
-
+// --- Boucles de jeu ---
 setInterval(createCloud, 1500);
 setInterval(createCoin, 1000);
 setInterval(() => createBonus("magnet"), 15000);
-
 setInterval(() => {
   distance += 10 * speedMultiplier;
   distanceDisplay.textContent = distance;
@@ -200,4 +231,4 @@ setInterval(() => {
   }
 }, 200);
 
-animatePlane(); // Lancer l'animation
+

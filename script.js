@@ -111,6 +111,7 @@ function createCloud() {
     ) {
       if (confirm("💥 Collision avec un nuage !\nRejouer ?")) {
   location.reload();
+      }
     }
 
     if (cloudX < -100) {

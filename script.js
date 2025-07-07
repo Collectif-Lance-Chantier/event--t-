@@ -109,8 +109,8 @@ function createCloud() {
       planeRect.top < cloudRect.bottom &&
       planeRect.bottom > cloudRect.top
     ) {
-      alert("💥 Collision avec un nuage !\nDistance parcourue : " + distance + " m");
-      location.reload();
+      if (confirm("💥 Collision avec un nuage !\nRejouer ?")) {
+  location.reload();
     }
 
     if (cloudX < -100) {

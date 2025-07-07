@@ -109,10 +109,9 @@ function createCloud() {
       planeRect.top < cloudRect.bottom &&
       planeRect.bottom > cloudRect.top
     ) {
-      if (confirm("💥 Collision avec un nuage !\nRejouer ?")) {
-  location.reload();
-}
-    }
+      (confirm("💥 Collision avec un nuage !\nRejouer ?"))
+      location.reload();
+      }
 
     if (cloudX < -100) {
       cloud.remove();
